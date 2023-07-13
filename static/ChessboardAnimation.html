@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>国际象棋马跳跃动画</title>
+		<style>
+			/* 在这里添加样式 */
+			#chessboard {
+				width: 100%;
+				display: grid;
+				grid-template-columns: repeat(var(--board-size), 20px);
+				grid-template-rows: repeat(var(--board-size), 20px);
+				gap: 0;
+			}
+
+			.cell {
+				width: 20px;
+				height: 20px;
+				border: 1px solid #ccc;
+			}
+
+			.cell.white {
+				background-color: #ffffff;
+			}
+
+			.cell.black {
+				background-color: #000000;
+			}
+
+			.cell.yellow {
+				background-color: #ffff00;
+			}
+
+			.cell.knight {
+				background-color: red;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="chessboard"></div>
+		<script>
+			// 初始化棋盘
+			const chessboard = document.getElementById('chessboard');
+
+			// 发送GET请求获取JSON数据
+			fetch('http://127.0.0.1:5000/json-data')
+				.then(response => response.json())
+				.then(data => {
+					const boardSize = data.boardSize;
+					const start = data.start;
+					const target = data.target;
+					const path = data.path;
+
+					chessboard.style.setProperty('--board-size', boardSize);
+
+					for (let i = 0; i < boardSize; i++) {
+						for (let j = 0; j < boardSize; j++) {
+							const cell = document.createElement('div');
+							cell.className = 'cell ' + ((i + j) % 2 === 0 ? 'white' : 'black');
+							cell.id = `cell-${i + 1}-${j + 1}`;
+							chessboard.appendChild(cell);
+						}
+					}
+
+					const startCell = document.getElementById(`cell-${start.x}-${start.y}`);
+					startCell.innerText = 'S';
+					startCell.className = 'cell yellow';
+					const targetCell = document.getElementById(`cell-${target.x}-${target.y}`);
+					targetCell.innerText = 'T';
+					targetCell.className = 'cell yellow';
+
+					// 马的跳跃动画
+					const delay = 1000;
+
+					function moveKnight(index) {
+						if (index >= path.length) return;
+
+						const position = path[index];
+						const currentCell = document.getElementById(`cell-${position.x}-${position.y}`);
+						console.log(position);
+
+						// 移除马图标
+						if (index > 0) {
+							const previousCell = document.getElementById(`cell-${path[index - 1].x}-${path[index - 1].y}`);
+							previousCell.classList.remove('knight');
+						}
+
+						// 添加马图标
+						currentCell.classList.add('knight');
+
+						// 递归调用
+						setTimeout(() => moveKnight(index + 1), delay);
+					}
+
+					moveKnight(0);
+				})
+				.catch(error => console.error('Error:', error));
+		</script>
+	</body>
+</html>
